@@ -21,6 +21,11 @@
   <ItemGroup>
     <ClCompile Include="neuralNetworkN.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="mnist\mnist_test.csv" />
+    <None Include="mnist\mnist_train.csv" />
+    <None Include="Python\NeuralNetworkPy.py" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{573E0630-377F-43D2-8348-8CC6B7E7896B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -92,11 +97,15 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
