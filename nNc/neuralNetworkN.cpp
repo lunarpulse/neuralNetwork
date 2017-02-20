@@ -7,8 +7,9 @@
 using namespace std;
 
 //constants
-const int NUMINPUTNODES = 3;
-const int NUMHIDDENNODES = 5;
+static const unsigned int fraction = 10;
+const int NUMINPUTNODES = 8;
+const int NUMHIDDENNODES = 15;
 const int NUMOUTPUTNODES = 1;
 const int NUMNODES = NUMINPUTNODES + NUMHIDDENNODES + NUMOUTPUTNODES;
 
@@ -25,6 +26,7 @@ void trainingExample(double[], double[], int[]);
 void activateNetwork(double[][ARRAYSIZE], double[], double[]);
 double updateWeights(double[][ARRAYSIZE], double[], double[], double[]);
 void displayNetwork(double[], double);
+void displayProgErrorPercent(double[], double, int);
 
 int main() {
 
@@ -43,9 +45,15 @@ int main() {
 	while (counter < MAXITERATIONS) {
 		trainingExample(values, expectedValues, inputValues);
 		activateNetwork(weights, values, thresholds);
-		double sumOfSquaredErrors = updateWeights(weights, values, expectedValues, thresholds);
 
-		displayNetwork(values, sumOfSquaredErrors);
+		double sumOfSquaredErrors = updateWeights(weights, values, expectedValues, thresholds);
+		displayProgErrorPercent(values, sumOfSquaredErrors, counter);
+
+		if (counter > MAXITERATIONS - 2 * NUMINPUTNODES -1)
+		{
+			displayNetwork(values, sumOfSquaredErrors);
+		}
+
 		counter++;
 	}
 	return 0;
@@ -103,7 +111,7 @@ void trainingExample(double values[], double expectedValues[], int inputValues[]
 	int pos = counter % NUMINPUTNODES;
 
 	filler(values, inputValues, pos);
-	expectedValues[1 + NUMINPUTNODES + NUMHIDDENNODES] = inputValues[pos]%2;
+	expectedValues[1 + NUMINPUTNODES + NUMHIDDENNODES] = inputValues[pos]% 2; // bit operation so 2 0,1
 	
 	counter++;
 }
@@ -170,4 +178,14 @@ void displayNetwork(double values[], double sumOfSquaredErrors) {
 	}
 		cout << ">" << values[1 + NUMINPUTNODES + NUMHIDDENNODES] << "|" << " error: " <<setprecision(5)	<< sumOfSquaredErrors << endl;
 	counter++;
+}
+
+void displayProgErrorPercent(double values[], double sumOfSquaredErrors, int counter)
+{
+	int display = counter % (MAXITERATIONS / fraction);
+	float percentage = static_cast<float>(counter / (MAXITERATIONS / fraction) * 100/fraction);
+	if (display == 0)
+	{
+		cout << percentage << "% >> E:"<< setprecision(5) << sumOfSquaredErrors << endl;
+	}
 }
