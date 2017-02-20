@@ -7,21 +7,21 @@
 using namespace std;
 
 //constants
-const int NUMINPUTNODES = 2;
-const int NUMHIDDENNODES = 2;
-const int NOMOUTPUTNODES = 1;
-const int NUMNODES = NUMINPUTNODES + NUMHIDDENNODES + NOMOUTPUTNODES;
+const int NUMINPUTNODES = 3;
+const int NUMHIDDENNODES = 5;
+const int NUMOUTPUTNODES = 1;
+const int NUMNODES = NUMINPUTNODES + NUMHIDDENNODES + NUMOUTPUTNODES;
 
 const int ARRAYSIZE = NUMNODES + 1; //1 - offset to match node 1 node 2 etc
-const int MAXITERATIONS = 131072;
+const int MAXITERATIONS = 131072; 
 
 const double E = 2.71828;
 const double LEARNINGRATE = 0.2;
 
 //function prototypes
-void initialise(double[][ARRAYSIZE], double[], double[], double[]);
+void initialise(double[][ARRAYSIZE], double[], double[], double[], int[]);
 void connectNodes(double[][ARRAYSIZE], double[]);
-void trainingExample(double[], double[]);
+void trainingExample(double[], double[], int[]);
 void activateNetwork(double[][ARRAYSIZE], double[], double[]);
 double updateWeights(double[][ARRAYSIZE], double[], double[], double[]);
 void displayNetwork(double[], double);
@@ -34,26 +34,29 @@ int main() {
 	double values[ARRAYSIZE];
 	double expectedValues[ARRAYSIZE];
 	double thresholds[ARRAYSIZE];
+	int inputValues[ARRAYSIZE];
 
-	initialise(weights, values, expectedValues, thresholds);
+	initialise(weights, values, expectedValues, thresholds, inputValues);
 	connectNodes(weights, thresholds);
 	int counter = 0;
 
 	while (counter < MAXITERATIONS) {
-		trainingExample(values, expectedValues);
+		trainingExample(values, expectedValues, inputValues);
 		activateNetwork(weights, values, thresholds);
 		double sumOfSquaredErrors = updateWeights(weights, values, expectedValues, thresholds);
+
 		displayNetwork(values, sumOfSquaredErrors);
 		counter++;
 	}
 	return 0;
 }
 
-void initialise(double weights[][ARRAYSIZE], double values[], double expectedValues[], double thresholds[]) {
-	for (size_t x = 0; x < NUMNODES; x++) {
+void initialise(double weights[][ARRAYSIZE], double values[], double expectedValues[], double thresholds[], int inputValues[]) {
+	for (size_t x = 0; x < NUMNODES+1; x++) {
 		values[x] = 0.0;
 		expectedValues[x] = 0.0;
 		thresholds[x] = 0.0;
+		inputValues[x] = (rand() % static_cast<int>(pow(2, NUMINPUTNODES)));
 		for (size_t y = 0; y < NUMNODES; y++) {
 			weights[x][y] = 0.0;
 		}
@@ -63,45 +66,45 @@ void initialise(double weights[][ARRAYSIZE], double values[], double expectedVal
 void connectNodes(double weights[][ARRAYSIZE], double thresholds[]) {
 	for (size_t x = 1; x < NUMNODES + 1; x++) {
 		for (size_t y = 1; y < NUMNODES + 1; y++) {
-			weights[x][y] = (rand() % 200) / 200.0 - 0.5;
+			weights[x][y] = (rand() % 200) / 100.0;
 		}
 	}
 
-	thresholds[3] = rand() / (double)rand();
-	thresholds[4] = rand() / (double)rand();
-	thresholds[5] = rand() / (double)rand();
+	for (size_t k = 1+ NUMINPUTNODES; k < 1 + NUMOUTPUTNODES + NUMINPUTNODES + NUMHIDDENNODES; k++)
+	{
+		thresholds[k] = rand() / (double)rand();
+	}
 
-	cout<< weights[1][3] <<" "<< weights[1][4] << " " << weights[2][3]<<\
-		" " << weights[2][4] << " " << weights[3][5] << " " << weights[4][5] << endl\
-		<< thresholds[3] << " " << thresholds[4] << " " << thresholds[5]<<endl;
+	for (size_t i = 1; i < 1 + NUMINPUTNODES + NUMHIDDENNODES; i++)
+	{
+		for (size_t j = 1+ NUMINPUTNODES; j < 1+ NUMNODES; j++)
+		{
+			cout << "weights[" << i << "][" << j << "]:  " << weights[i][j] << "	";
+		}
+		cout << endl;
+	}
 
+	for (size_t j = 1 + NUMINPUTNODES; j < 1 + NUMNODES; j++)
+	{
+		cout << " thresholds[" << j << "]: " << thresholds[j] << " ";
+	}
+	cout << endl;
 }
 
-void trainingExample(double values[], double expectedValues[]) {
-	static int counter = 0;
-
-	switch (counter % 4) {
-	case 0:
-		values[1] = 1.0;
-		values[2] = 1.0;
-		expectedValues[5] = 0.0;
-		break;
-	case 1:
-		values[1] = 0.0;
-		values[2] = 1.0;
-		expectedValues[5] = 1.0;
-		break;
-	case 2:
-		values[1] = 1.0;
-		values[2] = 0.0;
-		expectedValues[5] = 1.0;
-		break;
-	case 3:
-		values[1] = 0.0;
-		values[2] = 0.0;
-		expectedValues[5] = 0.0;
-		break;
+void filler(double values[], int inputValues[], int pos) {
+	for (size_t i = 0; i < NUMINPUTNODES; i++)
+	{
+		values[i+1] = (inputValues[pos]>> i) & 0x01;
 	}
+}
+
+void trainingExample(double values[], double expectedValues[], int inputValues[]) {
+	static int counter = 0;
+	int pos = counter % NUMINPUTNODES;
+
+	filler(values, inputValues, pos);
+	expectedValues[1 + NUMINPUTNODES + NUMHIDDENNODES] = inputValues[pos]%2;
+	
 	counter++;
 }
 
@@ -159,9 +162,12 @@ double updateWeights(double weights[][ARRAYSIZE], double values[], double expect
 
 void displayNetwork(double values[], double sumOfSquaredErrors) {
 	static int counter = 0;
-	if ((counter % 4) == 0) cout << setfill('-')<< setw(40) << "-" << endl;
-	cout << setfill(' ')<< fixed << setw(8) << setprecision(4)  << values[1] \
-		<< "|" << setprecision(4) << values[2] << "|" << setprecision(4) \
-		<< values[5] << "|" << " error: " <<setprecision(5)	<< sumOfSquaredErrors << endl;
+	if ((counter % NUMINPUTNODES) == 0) cout << setfill('-')<< setw(8 * (NUMNODES-1)) << "-" << endl;
+	cout << setfill(' ') << fixed << setw(8) << setprecision(4);
+	for (size_t i = 1; i < 1+ NUMINPUTNODES; i++)
+	{
+		cout << values[i] << "|";
+	}
+		cout << ">" << values[1 + NUMINPUTNODES + NUMHIDDENNODES] << "|" << " error: " <<setprecision(5)	<< sumOfSquaredErrors << endl;
 	counter++;
 }
